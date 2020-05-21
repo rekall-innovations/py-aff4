@@ -21,6 +21,7 @@ from past.utils import old_div
 from builtins import object
 import binascii
 import logging
+import lz4.block
 import struct
 
 from expiringdict import ExpiringDict
@@ -68,10 +69,13 @@ class _CompressorStream(object):
 
         if self.owner.compression == lexicon.AFF4_IMAGE_COMPRESSION_ZLIB:
             compressed_chunk = zlib.compress(chunk)
+        elif self.owner.compression == lexicon.AFF4_IMAGE_COMPRESSION_LZ4:
+            compressed_chunk = lz4.block.compress(chunk)
         elif (snappy and self.owner.compression ==
               lexicon.AFF4_IMAGE_COMPRESSION_SNAPPY):
             compressed_chunk = snappy.compress(chunk)
-        elif self.owner.compression == lexicon.AFF4_IMAGE_COMPRESSION_STORED:
+        elif self.owner.compression in (lexicon.AFF4_IMAGE_COMPRESSION_STORED, 
+                                        lexicon.AFF4_IMAGE_COMPRESSION_NONE):
             compressed_chunk = chunk
 
         compressedLen = len(compressed_chunk)
@@ -90,9 +94,10 @@ class _CompressorStream(object):
 class AFF4Image(aff4.AFF4Stream):
 
     def setCompressionMethod(self, method):
-        if method in [zip.ZIP_STORED, lexicon.AFF4_IMAGE_COMPRESSION_STORED]:
+        if method in [zip.ZIP_STORED, lexicon.AFF4_IMAGE_COMPRESSION_STORED, lexicon.AFF4_IMAGE_COMPRESSION_NONE]:
             self.compression = lexicon.AFF4_IMAGE_COMPRESSION_STORED
-        elif method in [lexicon.AFF4_IMAGE_COMPRESSION_SNAPPY, lexicon.AFF4_IMAGE_COMPRESSION_SNAPPY_SCUDETTE, lexicon.AFF4_IMAGE_COMPRESSION_ZLIB ]:
+        elif method in [lexicon.AFF4_IMAGE_COMPRESSION_SNAPPY, lexicon.AFF4_IMAGE_COMPRESSION_SNAPPY_SCUDETTE,
+                         lexicon.AFF4_IMAGE_COMPRESSION_ZLIB, lexicon.AFF4_IMAGE_COMPRESSION_LZ4 ]:
             self.compression = method
         else:
             raise RuntimeError("Bad compression parameter")
@@ -245,10 +250,13 @@ class AFF4Image(aff4.AFF4Stream):
 
         if self.compression == lexicon.AFF4_IMAGE_COMPRESSION_ZLIB:
             compressed_chunk = zlib.compress(chunk)
+        elif self.compression == lexicon.AFF4_IMAGE_COMPRESSION_LZ4:
+            compressed_chunk = lz4.block.compress(chunk)
         elif (snappy and self.compression ==
               lexicon.AFF4_IMAGE_COMPRESSION_SNAPPY):
             compressed_chunk = snappy.compress(chunk)
-        elif self.compression == lexicon.AFF4_IMAGE_COMPRESSION_STORED:
+        elif self.compression in (lexicon.AFF4_IMAGE_COMPRESSION_STORED, 
+                                lexicon.AFF4_IMAGE_COMPRESSION_NONE):
             compressed_chunk = chunk
 
         compressedLen = len(compressed_chunk)
@@ -646,6 +654,11 @@ class AFF4Image(aff4.AFF4Stream):
                 return cbuffer
             return zlib.decompress(cbuffer)
 
+        elif self.compression == lexicon.AFF4_IMAGE_COMPRESSION_LZ4 :
+            if len(cbuffer) == self.chunk_size:
+                return cbuffer
+            return lz4.block.decompress(cbuffer, self.chunk_size)
+
         elif self.compression == lexicon.AFF4_IMAGE_COMPRESSION_SNAPPY_SCUDETTE:
             # Backwards compatibility with Scudette's AFF4 implementation.
             # Chunks are always compressed.
@@ -661,7 +674,8 @@ class AFF4Image(aff4.AFF4Stream):
             except Exception as e:
                 raise e
 
-        elif self.compression == lexicon.AFF4_IMAGE_COMPRESSION_STORED:
+        elif self.compression in (lexicon.AFF4_IMAGE_COMPRESSION_STORED, 
+                                lexicon.AFF4_IMAGE_COMPRESSION_NONE):
             return cbuffer
 
         else:

@@ -421,7 +421,8 @@ class AFF4Map(aff4.AFF4Stream):
             # If the stream should not be compressed, it is more efficient to
             # use a native volume member (e.g. ZipFileSegment or
             # FileBackedObjects) than the more complex bevy based images.
-            if compression_urn == lexicon.AFF4_IMAGE_COMPRESSION_STORED:
+            if compression_urn in (lexicon.AFF4_IMAGE_COMPRESSION_STORED, 
+                                    lexicon.AFF4_IMAGE_COMPRESSION_NONE):
                 with self.resolver.AFF4FactoryOpen(volume_urn) as volume:
                     with volume.CreateMember(target) as member:
                         return member.urn

@@ -109,7 +109,9 @@ AFF4_LEGACY_IMAGE_COMPRESSION = (AFF4_LEGACY_NAMESPACE + "CompressionMethod")
 AFF4_IMAGE_COMPRESSION_ZLIB = "https://www.ietf.org/rfc/rfc1950.txt"
 AFF4_IMAGE_COMPRESSION_SNAPPY = "http://code.google.com/p/snappy/"
 AFF4_IMAGE_COMPRESSION_SNAPPY_SCUDETTE = "https://github.com/google/snappy"
+AFF4_IMAGE_COMPRESSION_LZ4 = "https://code.google.com/p/lz4/"
 AFF4_IMAGE_COMPRESSION_STORED = (AFF4_NAMESPACE + "compression/stored")
+AFF4_IMAGE_COMPRESSION_NONE = (AFF4_NAMESPACE + "NullCompressor")
 AFF4_IMAGE_AES_XTS = "https://doi.org/10.1109/IEEESTD.2008.4493450"
 
 # AFF4Map - stores a mapping from one stream to another.
