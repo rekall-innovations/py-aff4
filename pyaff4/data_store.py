@@ -337,7 +337,7 @@ class MemoryDataStore(object):
     def _should_ignore(self, subject, predicate, object):
 
         if predicate == lexicon.AFF4_TYPE:
-            if object == lexicon.AFF4_ZIP_SEGMENT_TYPE or object == object == lexicon.AFF4_ZIP_TYPE:
+            if object == lexicon.AFF4_ZIP_SEGMENT_TYPE or object == lexicon.AFF4_ZIP_TYPE:
                 return True
             else:
                 return False

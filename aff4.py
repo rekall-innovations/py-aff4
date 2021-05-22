@@ -264,7 +264,7 @@ def ingestZipfile(container_name, zipfiles, append, check_bytes):
 def addPathNamesToVolume(resolver, volume, pathnames, recursive, hashbased):
     for pathname in pathnames:
         if not os.path.exists(pathname):
-            print("Path %s not found. Skipping.")
+            print("Path %s not found. Skipping." % pathname)
             continue
         pathname = utils.SmartUnicode(pathname)
         print("\tAdding: %s" % pathname)
@@ -343,11 +343,10 @@ def extractAllFromVolume(container_urn, volume, destFolder):
         imageUrn = utils.SmartUnicode(imageUrn)
 
         pathName = next(resolver.QuerySubjectPredicate(volume.urn, imageUrn, lexicon.standard11.pathName)).value
-        if pathName.startswith("/"):
-            pathName = "." + pathName
         with resolver.AFF4FactoryOpen(imageUrn) as srcStream:
             if destFolder != "-":
-                destFile = os.path.join(destFolder, pathName)
+                drive, pathName = os.path.splitdrive(pathName) # Windows drive letters
+                destFile = os.path.join(destFolder, drive[:-1], pathName.strip("/\\"))
                 if not os.path.exists(os.path.dirname(destFile)):
                     try:
                         os.makedirs(os.path.dirname(destFile))
@@ -370,6 +369,7 @@ def extractAllFromVolume(container_urn, volume, destFolder):
 
             else:
                 shutil.copyfileobj(srcStream, sys.stdout)
+
 def extractAll(container_name, destFolder, password):
     container_urn = rdfvalue.URN.FromFileName(container_name)
     urn = None
@@ -398,7 +398,8 @@ def extractFromVolume(container_urn, volume, imageURNs, destFolder):
                 pathName = escaping.arnPathFragment_from_path(pathName.value)
                 while pathName.startswith("/"):
                     pathName = pathName[1:]
-                destFile = os.path.join(destFolder, pathName)
+                drive, pathName = os.path.splitdrive(pathName) # Windows drive letters
+                destFile = os.path.join(destFolder, drive[:-1], pathName.strip("/\\"))
                 if not os.path.exists(os.path.dirname(destFile)):
                     try:
                         os.makedirs(os.path.dirname(destFile))
