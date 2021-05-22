@@ -62,6 +62,8 @@ def arnPathFragment_from_path(pathName):
             escaped_path.append("/")
         elif c == ' ':
             escaped_path.append("%20")
+        elif c == '"':
+            escaped_path.append("%22")
         elif c == '%':
             escaped_path.append("%25")
         elif c in FORBIDDEN:
